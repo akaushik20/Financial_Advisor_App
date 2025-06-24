@@ -38,7 +38,7 @@ if __name__ == "__main__":
     
     if user_inputs:
         #call Profile Agent
-        st.write("Profile Agent is being called...")
+        st.write("Advisor Agent is being called...")
 
         state: AdvisorState = {
             "user_input": user_inputs,
@@ -53,14 +53,14 @@ if __name__ == "__main__":
         final_state=graph.invoke(state)
 
         # Call the profile agent with the user inputs
-        st.subheader("Profile Agent Output")
-        st.json(final_state["profile"])
+        #st.subheader("Profile Agent Output")
+        #st.json(final_state["profile"])
 
-        st.subheader("Market Agent Output.")
-        st.json(final_state["market_data"])
+        #st.subheader("Market Agent Output.")
+        #st.json(final_state["market_data"])
 
         st.subheader("Advice Agent Output")
-        st.json(final_state["advice"])
+        st.markdown(final_state["advice"]["advice"])
 
 
 
