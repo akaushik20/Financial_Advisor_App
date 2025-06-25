@@ -6,6 +6,7 @@ import requests
 from shared_state import AdvisorState
 
 import config 
+import streamlit as st
 
 
 
@@ -16,6 +17,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv()
 # Fetch the environment variables
 POLYGON_API_KEY=os.getenv("POLYGON_API_KEY", None)
+#POLYGON_API_KEY = st.secrets.get("POLYGON_API_KEY")
 
 
 # Asset selection by risk profile
