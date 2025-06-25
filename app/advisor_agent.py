@@ -46,7 +46,6 @@ Explain the reasoning in clear, simple terms.
         temperature=0.7
     )
 
-    print(response)
     state['advice'] = {
         'advice': response.choices[0].message.content}
 

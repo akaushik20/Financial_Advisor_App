@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 import requests
 from shared_state import AdvisorState
 
+import config 
+
 
 
 # Add the directory of this file to sys.path
@@ -15,18 +17,22 @@ load_dotenv()
 # Fetch the environment variables
 POLYGON_API_KEY=os.getenv("POLYGON_API_KEY", None)
 
-print(f"Ploygon API key: {POLYGON_API_KEY}")
 
 # Asset selection by risk profile
 def get_assets_by_risk(risk: str):
     risk = risk.lower()
-    if risk == "low":
-        #return ["SPY", "BND", "KO", "JNJ"], []
-        return ["SPY", "BND", "KO", "JNJ"], []
-    elif risk == "medium":
-        return ["QQQ", "VTI", "AAPL", "MSFT"], ["BTC", "ETH"]
-    else:  # high
-        return ["TSLA", "NVDA", "ARKK", "COIN"], ["BTC", "ETH", "SOL"]
+    categories = config.RISK_CATEGORY_MAP.get(risk,["index_etfs"])
+    stocks, crypto = [], []
+
+    for i in categories:
+        assets = config.STOCK_POOL.get(i, [])
+        if i == "crypto":
+            crypto.extend(assets)
+        else: 
+            stocks.extend(assets)
+    
+    return stocks, crypto
+
     
 # Fetch stock prices from Polygon
 def fetch_polygon_stocks(symbols):

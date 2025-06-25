@@ -29,8 +29,8 @@ def run_code():
             "additional_comments": prompt
             }
         # Display the user inputs in a table
-        st.write("User Inputs:")
-        st.write(pd.DataFrame(user_inputs, index=[0]))
+        #st.write("User Inputs:")
+        #st.write(pd.DataFrame(user_inputs, index=[0]))
     return user_inputs
 
 if __name__ == "__main__":
