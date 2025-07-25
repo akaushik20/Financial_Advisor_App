@@ -17,8 +17,52 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv()
 # Fetch the environment variables
 POLYGON_API_KEY=os.getenv("POLYGON_API_KEY", None)
-#POLYGON_API_KEY = st.secrets.get("POLYGON_API_KEY")
+FINNHUB_API_KEY=os.getenv("FINNHUB_API_KEY", None)
 
+LOW_RISK_SYMBOLS = [
+    "SPY",  # S&P 500 ETF
+    "VOO",  # Vanguard S&P 500 ETF
+    "VTI",  # Total Market ETF
+    "BND",  # Bond ETF
+    "JNJ",  # Johnson & Johnson
+    "PG",   # Procter & Gamble
+    "KO",   # Coca-Cola
+    "PEP",  # PepsiCo
+    "WMT",  # Walmart
+    "HD",   # Home Depot
+    "MCD",  # McDonald's
+    "XLP",  # Consumer Staples ETF
+]
+
+MEDIUM_RISK_SYMBOLS = [
+    "AAPL",  # Apple
+    "MSFT",  # Microsoft
+    "GOOGL", # Alphabet
+    "AMZN",  # Amazon
+    "NVDA",  # Nvidia
+    "META",  # Meta Platforms
+    "VUG",   # Vanguard Growth ETF
+    "QQQ",   # Nasdaq 100 ETF
+    "XLF",   # Financials ETF
+    "UNH",   # UnitedHealth
+    "JPM",   # JPMorgan Chase
+]
+
+HIGH_RISK_SYMBOLS = [
+    "ARKK",  # ARK Innovation ETF
+    "TSLA",  # Tesla
+    "COIN",  # Coinbase
+    "PLTR",  # Palantir
+    "SQ",    # Block (formerly Square)
+    "SOFI",  # SoFi Technologies
+    "RBLX",  # Roblox
+    "AFRM",  # Affirm
+    "RIOT",  # Riot Blockchain
+    "MARA",  # Marathon Digital
+    "XBI",   # Biotech ETF
+]
+
+POPULAR_SYMBOLS = LOW_RISK_SYMBOLS + MEDIUM_RISK_SYMBOLS + HIGH_RISK_SYMBOLS
 
 # Asset selection by risk profile
 def get_assets_by_risk(risk: str):
@@ -35,7 +79,35 @@ def get_assets_by_risk(risk: str):
     
     return stocks, crypto
 
-    
+def fetch_analyst_recommendations(symbols, risk):
+    selected_stocks = []
+    if not FINNHUB_API_KEY:
+        raise ValueError("Finnhub API key is not set.")
+    else:
+        for symbol in symbols:
+            url= f"https://finnhub.io/api/v1/stock/recommendation?symbol={symbol}&token={FINNHUB_API_KEY}"
+            response = requests.get(url)
+            if response.status_code==200:
+                data = response.json()
+                #print(f"Analyst recommendations for {symbol}: {data}")
+                if not data:
+                    continue
+                latest=data[0]
+                if latest['buy']>=10 and risk=="low":
+                    selected_stocks.append(symbol)
+                elif (latest['buy']+latest['strongBuy'])>=15 and risk=="medium":
+                    selected_stocks.append(symbol)
+                elif latest['strongBuy']>=10 and risk=="high":
+                    selected_stocks.append(symbol)
+                else:
+                    print(f"Skipping {symbol} due to insufficient recommendations for risk profile {risk}.")
+            else:
+                raise ValueError(f"Failed to fetch data for {symbol}. Status code: {response.status_code}")
+            
+    return selected_stocks
+
+
+
 # Fetch stock prices from Polygon
 def fetch_polygon_stocks(symbols):
     # Define the dictionary to hold stock prices
@@ -58,14 +130,18 @@ def market_agent(state: AdvisorState) -> AdvisorState:
     risk_profile = profile.get("Risk Appetite", "Low").lower()
     print(f"Risk Profile: {risk_profile}")
 
-    stocks, crypto=get_assets_by_risk(risk_profile)
-    print(f"Selected Stocks: {stocks}, Selected Crypto: {crypto}")
-    stock_price=fetch_polygon_stocks(stocks)
-    # For simplicity, we will not fetch crypto prices in this example
-    #print(f"Stock Prices: {stock_price['close']}")
+    #calling the recommendation function
+    recommended_stocks=fetch_analyst_recommendations(POPULAR_SYMBOLS, risk_profile)
+
+    #stocks, crypto=get_assets_by_risk(recommended_stocks)
+    print(f"Selected Stocks: {recommended_stocks}")
+    ##, Selected Crypto: {crypto}")
+    crypto = []
+    stock_price=fetch_polygon_stocks(recommended_stocks)
+
 
     state["market_data"] = {
-        "stocks": stocks,
+        "stocks": recommended_stocks,
         "crypto": crypto,
         "stock_prices": stock_price}
     return state
